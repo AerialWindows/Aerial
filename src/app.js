@@ -39,6 +39,7 @@ const {dismissStartMenu} = require('./start-menu');
 const videos = require("../videos.json");
 const videosById = new Map(videos.map(video => [video.id, video]));
 const {createPersistentSettings} = require('./settings-persistence');
+const {exportSettings, importSettings} = require('./settings-transfer');
 const store = createPersistentSettings(require('path').join(app.getPath('userData'), 'config.json'), {
     report: (message, error) => {
         console.error(message, error);
@@ -923,6 +924,32 @@ ipcMain.on('openFullscreenPreview', event => {
 ipcMain.on('openInfoEditor', (event) => {
     createEditWindow(launchArguments);
 });
+
+let transferringSettings = false;
+for (const [channel, transfer] of Object.entries({exportSettings, importSettings})) {
+    ipcMain.handle(channel, async event => {
+        if (event.sender !== configWindow?.webContents || transferringSettings) {
+            return {};
+        }
+        transferringSettings = true;
+        try {
+            const completed = await transfer(dialog, configWindow, store);
+            if (completed && channel === 'importSettings') {
+                allowedVideos = store.get('allowedVideos');
+                calculateAstronomy();
+                setupGlobalShortcut();
+                if (!await store.flush()) {
+                    return {completed, warning: 'Settings were applied, but Aerial could not save them to disk.'};
+                }
+            }
+            return {completed};
+        } catch (error) {
+            return {error: error.message};
+        } finally {
+            transferringSettings = false;
+        }
+    });
+}
 
 ipcMain.on('refreshConfig', (event) => {
     setUpConfigFile();

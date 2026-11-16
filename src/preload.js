@@ -122,7 +122,7 @@ module.exports = function initializePreload() {
                 },
                 // From render to main and back again.
                 invoke: (channel, args) => {
-                    let validChannels = ["getConfigAccent", "getUpdateStatus", "newVideoId", "compatibleVideo"];
+                    let validChannels = ["getConfigAccent", "getUpdateStatus", "newVideoId", "compatibleVideo", "importSettings", "exportSettings"];
                     if (validChannels.includes(channel)) {
                         return ipcRenderer.invoke(channel, args);
                     }

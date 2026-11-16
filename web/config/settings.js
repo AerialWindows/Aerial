@@ -1,5 +1,37 @@
-import {api, element, section} from './shared.js';
+import {api, ask, button, element, notify, section} from './shared.js';
 import {definition, createControl, refreshControls, sources} from './settings-controls.js';
+
+function settingsTransferRow() {
+    const controls = element('div', {className: 'setting-control'});
+    async function transfer(channel, action) {
+        for (const control of controls.children) {
+            control.disabled = true;
+        }
+        try {
+            const {completed, error, warning} = await api.ipcRenderer.invoke(channel);
+            if (error) {
+                notify(`Could not ${action} settings. ${error}`);
+            } else if (completed && channel === 'importSettings') {
+                await ask('Settings imported', warning || 'Aerial will reload the settings window.',
+                    {confirm: 'OK', cancel: false});
+                window.location.reload();
+            } else if (completed) {
+                notify('Settings exported.');
+            }
+        } catch (error) {
+            notify(`Could not ${action} settings. ${error.message}`);
+        } finally {
+            for (const control of controls.children) {
+                control.disabled = false;
+            }
+        }
+    }
+    controls.append(
+        button('Import settings', () => transfer('importSettings', 'import')),
+        button('Export settings', () => transfer('exportSettings', 'export')));
+    return element('div', {className: 'setting-row'},
+        element('span', {className: 'setting-name'}, 'Settings backup'), controls);
+}
 
 export function initSettings(root) {
     const search = document.getElementById('settings-search');
@@ -7,6 +39,9 @@ export function initSettings(root) {
     for (const group of definition.filter(group => group.id !== 'customVideo')) {
         const card = element('div', {className: 'card'});
         for (const entry of group.entries) {
+            if (entry.id === 'manualUpdate') {
+                card.append(settingsTransferRow());
+            }
             card.append(createControl(entry));
         }
         if (group.id === 'about') {
