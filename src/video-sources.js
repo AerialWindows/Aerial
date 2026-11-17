@@ -2,6 +2,9 @@ function getVideoSources(video, settings) {
     if (video.path) {
         return [video.path];
     }
+    if (video.url) {
+        return [video.url];
+    }
     const allowH265 = settings.get('allowH265') !== false;
     const allow4K = settings.get('allow4K') !== false;
     const prefer4K240 = allowH265 && allow4K && settings.get('prefer4K240') === true;

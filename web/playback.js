@@ -163,7 +163,7 @@ const videoPlayback = (() => {
             }
             const converted = electron.convertedVideo?.(video)
                 ? await electron.ipcRenderer.invoke('compatibleVideo', video.id) : null;
-            const sources = converted ? [converted] : video.path ? available : [
+            const sources = converted ? [converted] : video.path || video.url ? available : [
                 ...((electron.store.get('downloadedVideos') || []).includes(video.id)
                     ? [`${electron.store.get('cachePath')}/${video.id}.mov`] : []),
                 ...available
@@ -179,7 +179,7 @@ const videoPlayback = (() => {
                     }
                 }
             }
-            if (!electron.store.get('prepareCompatibleVideos')) {
+            if (video.url || !electron.store.get('prepareCompatibleVideos')) {
                 throw new Error('No playable video source; compatible video preparation is disabled');
             }
             const compatible = compatibleSources.get(video.id);

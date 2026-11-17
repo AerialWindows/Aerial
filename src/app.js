@@ -837,6 +837,23 @@ ipcMain.on('openConfigFolder', (event) => {
     shell.openExternal(app.getPath('userData'));
 });
 
+ipcMain.on('selectCustomVideos', async event => {
+    if (event.sender !== configWindow?.webContents) {
+        return;
+    }
+    try {
+        const result = await dialog.showOpenDialog(configWindow, {
+            properties: ['openFile', 'multiSelections'],
+            filters: [{name: 'Videos', extensions: ['mp4', 'm4v', 'mov', 'webm', 'ogv', 'mkv', 'avi']}]
+        });
+        if (!result.canceled && result.filePaths.length) {
+            event.reply('newCustomVideos', result.filePaths);
+        }
+    } catch (error) {
+        console.error('Unable to select custom videos', error);
+    }
+});
+
 ipcMain.on('selectCustomLocation', async (event, arg) => {
     try {
         const result = await dialog.showOpenDialog(screens[0], {
@@ -952,7 +969,7 @@ ipcMain.handle('compatibleVideo', async (event, id) => {
         throw new Error('Compatible video preparation is disabled');
     }
     const video = videos.find(video => video.id === id) || (store.get('customVideos') || []).find(video => video.id === id);
-    if (!video) {
+    if (!video || video.url) {
         throw new Error('Unknown video');
     }
     const sources = getVideoSources(video, store);

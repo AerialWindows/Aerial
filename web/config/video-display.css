@@ -17,3 +17,5 @@
 .custom-video-row .custom-name { flex: 1; min-width: 0; }
 .custom-video-row .custom-name input { width: 100%; }
 .custom-path { display: block; overflow-wrap: anywhere; margin-top: 0.28571429rem; }
+label[for="video-link-url"] { display: block; margin-bottom: 0.71428571rem; }
+.video-link-preview video { display: block; width: 100%; max-height: 36vh; margin-top: 1rem; background: #000; }
